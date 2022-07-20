@@ -175,7 +175,6 @@ export class PaymentService {
     prefill: User | string,
   ): Promise<Stripe.Checkout.Session> {
     return this.provider.checkout.sessions.create({
-      payment_method_types: ['card'],
       success_url: successUrl,
       cancel_url: cancelUrl,
       customer: typeof prefill === 'string' ? undefined : prefill?.customerId,
