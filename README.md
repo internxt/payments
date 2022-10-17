@@ -1,5 +1,7 @@
 # Payments
 
+[![node](https://img.shields.io/badge/node-16.4-brightgreen)](https://nodejs.org/download/release/latest-fermium/)
+
 ## Get started
 
 - Install and use Node v16 (last LTS).
