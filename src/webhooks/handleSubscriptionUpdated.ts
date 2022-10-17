@@ -2,13 +2,15 @@ import { FastifyLoggerInstance } from 'fastify';
 import Stripe from 'stripe';
 import { FREE_PLAN_BYTES_SPACE } from '../constants';
 import CacheService from '../services/CacheService';
-import { PriceMetadata } from '../services/PaymentService';
+import { Notifications } from '../services/NotificationService';
+import { PaymentService, PriceMetadata } from '../services/PaymentService';
 import { StorageService } from '../services/StorageService';
 import { UsersService } from '../services/UsersService';
 
 export default async function handleSubscriptionUpdated(
   storageService: StorageService,
   usersService: UsersService,
+  paymentService: PaymentService,
   subscription: Stripe.Subscription,
   cacheService: CacheService,
   log: FastifyLoggerInstance,
@@ -27,5 +29,10 @@ export default async function handleSubscriptionUpdated(
     log.error(`Error in handleSubscriptionUpdated after trying to clear ${customerId} subscription`);
   }
 
-  return storageService.changeStorage(uuid, bytesSpace);
+  await storageService.changeStorage(uuid, bytesSpace);
+  const updatedSubscription = await paymentService.getUserSubscription(customerId);
+  return Notifications.getInstance().subscriptionChanged({
+    userId: uuid,
+    subscription: updatedSubscription,
+  });
 }
