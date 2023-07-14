@@ -341,8 +341,13 @@ export class PaymentService {
 
     if (!product) throw new Error('The product does not exist');
 
+    const paymentMethods: Stripe.Checkout.SessionCreateParams.PaymentMethodType[] =
+      product?.interval === 'lifetime'
+        ? ['card', 'bancontact', 'ideal', 'sofort', 'paypal']
+        : ['card', 'bancontact', 'ideal', 'sofort'];
+
     const checkout = await this.provider.checkout.sessions.create({
-      payment_method_types: ['card', 'bancontact', 'ideal', 'sofort', 'paypal'],
+      payment_method_types: paymentMethods,
       success_url: successUrl,
       cancel_url: cancelUrl,
       customer: typeof prefill === 'string' ? undefined : prefill?.customerId,

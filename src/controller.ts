@@ -109,22 +109,22 @@ export default function (
       return rep.status(204).send();
     });
 
-    fastify.put<{ Body: { price_id: string; couponCode: string } }>(
+    fastify.put<{ Body: { price_id: string } }>(
       '/subscriptions',
       {
         schema: {
           body: {
             type: 'object',
             required: ['price_id'],
-            properties: { price_id: { type: 'string' }, couponCode: { type: 'string' } },
+            properties: { price_id: { type: 'string' } },
           },
         },
       },
       async (req, rep) => {
-        const { price_id: priceId, couponCode } = req.body;
+        const { price_id: priceId } = req.body;
 
         const user = await assertUser(req, rep);
-        await paymentService.updateSubscriptionPrice(user.customerId, priceId, couponCode);
+        await paymentService.updateSubscriptionPrice(user.customerId, priceId);
 
         const updatedSubscription = await paymentService.getUserSubscription(user.customerId);
         return rep.send(updatedSubscription);
