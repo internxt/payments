@@ -123,11 +123,13 @@ export class PaymentService {
     couponCode?: string,
     additionalOptions: Partial<Stripe.SubscriptionUpdateParams> = {},
   ): Promise<Subscription> {
+    const coupon = couponCode ? { coupon: couponCode } : {};
+
     const individualActiveSubscription = await this.findIndividualActiveSubscription(customerId);
     const updatedSubscription = await this.provider.subscriptions.update(individualActiveSubscription.id, {
       cancel_at_period_end: false,
       proration_behavior: 'create_prorations',
-      coupon: couponCode ? couponCode : undefined,
+      ...coupon,
       items: [
         {
           id: individualActiveSubscription.items.data[0].id,
