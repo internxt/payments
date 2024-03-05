@@ -185,6 +185,17 @@ export default function (
       return response;
     });
 
+
+    fastify.get('/get-user-subscription', async (req, rep) => {
+      let response: UserSubscription;
+
+      const user: User = await assertUser(req, rep);
+
+      response = await paymentService.getUserSubscription(user.customerId);
+
+      return response;
+    });
+
     function checkCurrency(currency?: string): { currencyValue: string; isError: boolean; errorMessage?: string } {
       let currencyValue: string;
 
