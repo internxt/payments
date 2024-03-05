@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import { type AppConfig } from '../config';
 import CacheService from '../services/CacheService';
 import { PaymentService, PriceMetadata } from '../services/PaymentService';
-import { createOrUpdateUser } from '../services/StorageService';
+import { createOrUpdateUser, updateUserTier } from '../services/StorageService';
 import { UsersService } from '../services/UsersService';
 
 export default async function handleCheckoutSessionCompleted(
@@ -53,6 +53,17 @@ export default async function handleCheckoutSessionCompleted(
   } catch (err) {
     log.error(
       `Error while creating or updating user in checkout session completed handler, email: ${session.customer_email}`,
+    );
+    log.error(err);
+
+    throw err;
+  }
+
+  try {
+    await updateUserTier(user.uuid, price.product as string, config);
+  } catch (err) {
+    log.error(
+      `Error while updating user tier: email: ${session.customer_email}, planId: ${price.product} `,
     );
     log.error(err);
 

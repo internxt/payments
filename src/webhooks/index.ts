@@ -48,6 +48,7 @@ export default function (
             (event.data.object as Stripe.Subscription).customer as string,
             cacheService,
             fastify.log,
+            config,
           );
           break;
         case 'customer.subscription.updated':
@@ -57,6 +58,7 @@ export default function (
             event.data.object as Stripe.Subscription,
             cacheService,
             fastify.log,
+            config,
           );
           break;
         case 'payment_method.attached':
@@ -94,6 +96,7 @@ export default function (
             (event.data.object as Stripe.Charge).customer as string,
             cacheService,
             fastify.log,
+            config,
           );
           break;
         default:

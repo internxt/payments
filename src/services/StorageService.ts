@@ -43,3 +43,16 @@ export async function createOrUpdateUser(maxSpaceBytes: string, email: string, c
     },
   );
 }
+
+export async function updateUserTier(uuid: string, planId: string, config: AppConfig) {
+  return axios.put(
+    `${config.DRIVE_GATEWAY_URL}/api/gateway/user/update/tier`,
+    { planId, uuid },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      auth: { username: config.DRIVE_GATEWAY_USER, password: config.DRIVE_GATEWAY_PASSWORD },
+    },
+  );
+}
