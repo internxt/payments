@@ -3,7 +3,7 @@ import { type AppConfig } from './config';
 import { UserNotFoundError, UsersService } from './services/UsersService';
 import { PaymentService } from './services/PaymentService';
 import fastifyJwt from '@fastify/jwt';
-import { User, UserSubscription } from './core/users/User';
+import { User } from './core/users/User';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const rateLimit = require('fastify-rate-limit');
 
@@ -28,11 +28,11 @@ export default function (
   return async function (fastify: FastifyInstance) {
     fastify.register(fastifyJwt, { secret: config.JWT_SECRET });
     fastify.register(rateLimit, {
-      max: 30, // Modify this according to Stripe rate limit, do we want to only get 30 of the  100 concurrent requests per second that stripe allows? This handles that  
+      max: 30, // Modify this according to Stripe rate limit. Max 100 requests per second 
       timeWindow: '1 second',
     });
     fastify.addHook('onRequest', async (request, reply) => {
-      try {        
+      try {
         await request.jwtVerify();
       } catch (err) {
         request.log.warn(`JWT verification failed with error: ${(err as Error).message}`);
@@ -41,14 +41,30 @@ export default function (
     });
 
     fastify.get('/get-user-subscription', async (req, rep) => {
-        let response: UserSubscription;
-  
-        const user: User = await assertUser(req, rep);
-  
-        response = await paymentService.getUserSubscription(user.customerId);
-  
-        return response;
-      });
+      let response: { planId: string, type: string, uuid: string };
+
+      const user: User = await assertUser(req, rep);
+
+      if (user.lifetime) {
+        const invoices = await paymentService.getInvoicesFromUser(user.customerId, { limit: 100 })
+        const oneTimePurchases = invoices.filter(invoice => invoice.paid && !invoice.subscription && invoice?.lines?.data[0]?.price?.type === 'one_time')
+          .map(invoice => ({ price: invoice.lines.data[0].price, planId: invoice.lines.data[0].price?.product }))
+        response = {
+          planId: oneTimePurchases[0].planId as string,
+          type: 'lifetime',
+          uuid: user.uuid
+        }
+      } else {
+        const subscription = await paymentService.getUserSubscription(user.customerId) as any;
+        response = {
+          planId: subscription.planId,
+          type: subscription.type,
+          uuid: user.uuid
+        }
+      }
+
+      return response;
+    });
 
   };
 }
