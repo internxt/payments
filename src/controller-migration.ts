@@ -28,7 +28,7 @@ export default function (
   return async function (fastify: FastifyInstance) {
     fastify.register(fastifyJwt, { secret: config.JWT_SECRET });
     fastify.register(rateLimit, {
-      max: 30, // Modify this according to Stripe rate limit. Max 100 requests per second 
+      max: 30, // Set according to stripe limits.
       timeWindow: '1 second',
     });
     fastify.addHook('onRequest', async (request, reply) => {
