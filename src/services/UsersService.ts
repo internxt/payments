@@ -181,6 +181,25 @@ export class UsersService {
     );
   }
 
+  async updateWorkspaceStorage(ownerId: string, maxSpaceBytes: number): Promise<void> {
+    const jwt = signToken('5m', this.config.DRIVE_NEW_GATEWAY_SECRET);
+    const requestConfig: AxiosRequestConfig = {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${jwt}`,
+      },
+      data: {
+        ownerId,
+        maxSpaceBytes,
+      },
+    };
+
+    await this.axios.put(
+      `${this.config.DRIVE_NEW_GATEWAY_URL}/gateway/workspaces/storage`,
+      requestConfig,
+    );
+  }
+
   async destroyWorkspace(ownerId: string): Promise<void> {
     const jwt = signToken('5m', this.config.DRIVE_NEW_GATEWAY_SECRET);
     const requestConfig: AxiosRequestConfig = {

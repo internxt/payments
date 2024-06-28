@@ -241,14 +241,26 @@ export class PaymentService {
 
   async updateSubscriptionPaymentMethod(
     customerId: CustomerId,
-    paymentMethod: PaymentMethod['id'],
+    paymentMethodId: PaymentMethod['id'],
+    subscriptionType: 'individual' | 'business' = 'individual',
   ): Promise<Subscription> {
-    const individualActiveSubscription = await this.findIndividualActiveSubscription(customerId);
-    const updatedSubscription = await this.provider.subscriptions.update(individualActiveSubscription.id, {
-      default_payment_method: paymentMethod,
-    });
+    const { id: subscriptionId } = subscriptionType == 'business'
+      ? await this.findB2BActiveSubscription(customerId)
+      : await this.findIndividualActiveSubscription(customerId);
 
-    return updatedSubscription;
+    if (!subscriptionId)
+      throw new Error('Subscription not found');
+
+    const { id, customer } = await this.provider.paymentMethods.attach(paymentMethodId, {
+      customer: customerId,
+    })
+
+    if (!id || !customer)
+      throw new Error('Payment method not attached');    
+
+    return this.provider.subscriptions.update(subscriptionId, {
+      default_payment_method: id,
+    });
   }
 
   async getCustomersByEmail(customerEmail: CustomerEmail): Promise<Customer[]> {
@@ -333,8 +345,12 @@ export class PaymentService {
     }
   }
 
-  getSetupIntent(customerId: string): Promise<SetupIntent> {
-    return this.provider.setupIntents.create({ customer: customerId, usage: 'off_session' });
+  getSetupIntent(customerId: string, metadata: Stripe.MetadataParam): Promise<SetupIntent> {
+    return this.provider.setupIntents.create({
+      customer: customerId,
+      usage: 'off_session',
+      metadata,
+    });
   }
 
   /*

@@ -172,12 +172,19 @@ export default function (
       },
     );
 
-    fastify.get('/setup-intent', async (req, rep) => {
-      const user = await assertUser(req, rep);
-      const { client_secret: clientSecret } = await paymentService.getSetupIntent(user.customerId);
+    fastify.get<{
+      Querystring: { subscriptionType?: 'individual' | 'business'; };
+    }>(
+      '/setup-intent',
+      async (req, rep) => {
+        const user = await assertUser(req, rep);
+        const { subscriptionType } = req.query;
+        const metadata: Stripe.MetadataParam = subscriptionType ? { subscriptionType } : {};
+        const { client_secret: clientSecret } = await paymentService.getSetupIntent(user.customerId, metadata);
 
-      return { clientSecret };
-    });
+        return { clientSecret };
+      },
+    );
 
     fastify.get<{
       Querystring: { subscriptionType?: 'individual' | 'business'; };
